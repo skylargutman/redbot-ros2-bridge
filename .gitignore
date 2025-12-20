@@ -1,0 +1,17 @@
+#python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+#ROS2
+build/
+install/
+log/
+
+#IDE
+.vscode/
+.idea/
+
+#OS
+.DS_Store
+*~
