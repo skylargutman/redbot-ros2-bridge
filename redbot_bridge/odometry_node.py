@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RedBot Odemetry Node
+RedBot Odometry Node
 Calculates robot pose from wheel encoder data
 """
 
@@ -53,6 +53,18 @@ class OdometryNode(Node):
 			10
 		)
 
+		#Subscriber - listen to motor commands for direction
+		self.motor_sub = self.create_subscription(
+			Int32MultiArray,
+			'motor_commands',
+			self.motor_callback,
+			10
+		)
+
+		#store last motor commands
+		self.last_left_motor_cmd = 0
+		self.last_right_motor_cmd = 0
+
 		#Publisher - odometry messages
 		self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
 
@@ -90,9 +102,14 @@ class OdometryNode(Node):
 		self.last_right_ticks = right_ticks
 
 		#convert ticks to meters
-		left_distance = delta_left * self.meters_per_tick
-		right_distance = delta_right * self.meters_per_tick
+		left_distance = abs(delta_left) * self.meters_per_tick
+		right_distance = abs(delta_right) * self.meters_per_tick
 
+		# apply direction based on motor commands
+		if self.last_left_motor_cmd < 0:
+			left_distance = -left_distance
+		if self.last_right_motor_cmd < 0:
+			right_distance = -right_distance
 
 		#differential drive kinematics
 		#Caluculate distance traveled and change in heading
@@ -172,6 +189,13 @@ class OdometryNode(Node):
 
 		# Broadcast transform
 		self.tf_broadcaster.sendTransform(transform)
+
+	def motor_callback(self,msg):
+		"""Store motor command directions"""
+
+		if len(msg.data) >= 2:
+			self.last_left_motor_cmd = msg.data[0]
+			self.last_right_motor_cmd = msg.data[1]
 
 
 def main(args=None):

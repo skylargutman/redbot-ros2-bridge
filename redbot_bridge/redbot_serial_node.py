@@ -40,10 +40,13 @@ class RedBotBridge(Node):
 			self.bump_left_pub = self.create_publisher(Bool, 'bumper/left', 10)
 			self.bump_right_pub = self.create_publisher(Bool, 'bumper/right', 10)
 
+			#publisher for motor commands (for odometry direction correction)
+			self.motor_cmd_pub = self.create_publisher(Int32MultiArray, 'motor_commands', 10)
+
 			#subscriber - receive velocity commands from ROS2
 			self.cmd_vel_sub = self.create_subscription(Twist, 'cmd_vel', self.cmd_vel_callback, 10)
 
-			#store wheel base for velocity calculations (meters)
+			#store wheelbase for velocity calculations (meters)
 			self.wheel_base = 0.135 #distance between wheels
 			self.max_speed = 255 #max motor speed value
 
@@ -60,12 +63,12 @@ class RedBotBridge(Node):
 	def cmd_vel_callback(self, msg):
 		"""Convert Twist message to motor speeds and send to Arduino"""
 
-		# Extract linear (foward/backward) and angular (turn) velocities
+		# Extract linear (forward/backward) and angular (turn) velocities
 		linear = msg.linear.x
 		angular = msg.angular.z
 
 		#convert to differential drive (left right wheel speeds)
-		#when angular is poistive, robot turns left (right wheel faster)
+		#when angular is positive, robot turns left (right wheel faster)
 		left_speed = linear - (angular * self.wheel_base / 2.0)
 		right_speed = linear + (angular * self.wheel_base / 2.0)
 
@@ -80,6 +83,11 @@ class RedBotBridge(Node):
 		#send command to Arduino
 		command = f"MOTOR,{left_motor},{right_motor}\n"
 		self.serial.write(command.encode())
+
+		#publish motor commands for odometry direction correction
+		motor_msg = Int32MultiArray()
+		motor_msg.data = [left_motor, right_motor]
+		self.motor_cmd_pub.publish(motor_msg)
 
 
 	def read_sensors(self):
@@ -153,7 +161,7 @@ def main(args=None):
 	node = RedBotBridge()
 
 	try:
-		#keep the node running until crtl+c
+		#keep the node running until ctrl+c
 		rclpy.spin(node)
 	except KeyboardInterrupt:
 		node.get_logger().info('Shutting down...')
