@@ -243,6 +243,84 @@ journalctl -u redbot.service -n 50
 groups $USER  # should show 'dialout'
 ```
 
+## Visualization with RViz
+
+### On Desktop (Windows with WSL2)
+
+#### Prerequisites
+- ROS2 Jazzy installed in WSL2
+- Network connectivity to robot
+
+#### Network Setup
+
+Enable WSL2 mirrored networking. Create `C:\Users\<YourUsername>\.wslconfig`:
+```ini
+[wsl2]
+networkingMode=mirrored
+```
+
+Restart WSL2:
+```powershell
+wsl --shutdown
+```
+
+#### CycloneDDS Configuration
+
+Create `~/cyclonedds.xml` in WSL2:
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schema>
+    <Domain>
+        <General>
+            <NetworkInterfaceAddress>auto</NetworkInterfaceAddress>
+        </General>
+        <Discovery>
+            <ParticipantIndex>auto</ParticipantIndex>
+            <Peers>
+                <Peer address="192.168.0.42"/>
+            </Peers>
+        </Discovery>
+    </Domain>
+</CycloneDDS>
+```
+
+On the robot, create the same file with your desktop's IP as the peer.
+
+#### Install CycloneDDS
+```bash
+# On desktop (WSL2)
+sudo apt install ros-jazzy-rmw-cyclonedds-cpp -y
+
+# On robot
+sudo apt install ros-humble-rmw-cyclonedds-cpp -y
+```
+
+Update robot's systemd service (`/etc/systemd/system/redbot.service`) to include:
+```ini
+Environment="RMW_IMPLEMENTATION=rmw_cyclonedds_cpp"
+Environment="CYCLONEDDS_URI=file:///home/skylar/cyclonedds.xml"
+```
+
+#### Launch RViz
+```bash
+export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+rviz2 -d ~/path/to/redbot-ros2-bridge/rviz/redbot.rviz
+```
+
+Or start fresh:
+```bash
+rviz2
+```
+
+**RViz Configuration:**
+1. Set Fixed Frame to `odom`
+2. Add TF display
+3. Add Odometry display (topic: `/odom`)
+4. Add Path display for trajectory trail
+
+The saved configuration is in `rviz/redbot.rviz`.
+
 ## Contributing
 
 Feel free to submit issues and pull requests!
