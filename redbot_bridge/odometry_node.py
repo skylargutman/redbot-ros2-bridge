@@ -208,7 +208,7 @@ def main(args=None):
 	except KeyboardInterrupt:
 		node.get_logger().info('Shutting down odometry node...')
 	finally:
-		node.destry_node()
+		node.destroy_node()
 		rclpy.shutdown()
 
 
