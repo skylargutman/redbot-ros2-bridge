@@ -47,5 +47,17 @@ def generate_launch_description():
 			],
 		),
 
+		# Start camera node
+		Node(
+			package='redbot_bridge',
+			executable='camera_node',
+			name='camera',
+			output='screen',
+			parameters=[
+				{'width': 640},
+				{'height': 480},
+				{'framerate': 15}  # Lower framerate to reduce Pi load
+			]
+		),
 	])
 

@@ -27,6 +27,7 @@ setup(
         'console_scripts': [
 		'redbot_node = redbot_bridge.redbot_serial_node:main',
 		'odometry_node = redbot_bridge.odometry_node:main',
+        'camera_node = redbot_bridge.camera_node:main',
         ],
     },
 )
