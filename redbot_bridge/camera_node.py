@@ -11,6 +11,8 @@ from cv_bridge import CvBridge
 import cv2
 from picamera2 import Picamera2
 import numpy as np
+import os
+import time
 
 
 class CameraNode(Node):
@@ -37,11 +39,18 @@ class CameraNode(Node):
 
         # Initialize camera
         self.get_logger().info(f'Initializing camera at {width}x{height} @ {framerate}fps')
-        self.picam2 = Picamera2()
-        config = self.picam2.create_preview_configuration(
+
+	os.environ['LIBCAMERA_LOG_LEVELS'] = '*:ERROR'
+	self.picam2 = Picamera2()
+
+	config = self.picam2.create_preview_configuration(
             main={"size": (width, height), "format": "RGB888"}
         )
         self.picam2.configure(config)
+
+	# Don't use display preview
+        time.sleep(1)
+
         self.picam2.start()
 
         # Timer to capture and publish
