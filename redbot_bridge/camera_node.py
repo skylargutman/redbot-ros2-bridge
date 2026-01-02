@@ -40,15 +40,15 @@ class CameraNode(Node):
         # Initialize camera
         self.get_logger().info(f'Initializing camera at {width}x{height} @ {framerate}fps')
 
-	os.environ['LIBCAMERA_LOG_LEVELS'] = '*:ERROR'
-	self.picam2 = Picamera2()
+        os.environ['LIBCAMERA_LOG_LEVELS'] = '*:ERROR'
+        self.picam2 = Picamera2()
 
-	config = self.picam2.create_preview_configuration(
+        config = self.picam2.create_preview_configuration(
             main={"size": (width, height), "format": "RGB888"}
         )
         self.picam2.configure(config)
 
-	# Don't use display preview
+        # Don't use display preview
         time.sleep(1)
 
         self.picam2.start()
